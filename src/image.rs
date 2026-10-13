@@ -5,7 +5,7 @@ use crate::{Error, types::Uri};
 
 /// Serves as a builder, but can be built from new. Each image is built into a private controlled
 /// type when added to the `Images` list (which is not mandatory, and has no minimum length).
-#[derive(Debug, Default, Deserialize)]
+#[derive(Clone, Debug, Default, Deserialize)]
 pub struct Image {
     image_url: Option<String>,
     iiif_manifest_url: Option<String>,

@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::types::Uri;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Agent {
     name: String,
     identifier: Option<Uri>,

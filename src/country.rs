@@ -42,7 +42,7 @@ impl CountryBuilder {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Country {
     name: String,
     qid: u32,

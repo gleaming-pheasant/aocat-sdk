@@ -3,7 +3,7 @@ use wkt::ToWkt;
 
 /// Wrapper around `geojson::Geometry` to implement `Serialize` (as WKT) and `Deserialize` (from
 /// GeoJSON).
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct Geometry(geojson::Geometry);
 
 impl Geometry {

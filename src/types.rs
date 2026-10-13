@@ -14,7 +14,7 @@ pub type DataTypes = MinLengthVec<1, DataType>;
 pub type NativeSubjects = MinLengthVec<1, String>;
 pub type NativeTypes = MinLengthVec<1, String>;
 
-#[derive(Debug, Serialize)]
+#[derive(Clone, Debug, Serialize)]
 pub struct MinLengthVec<const LEN: usize, T>(Vec<T>);
 
 impl<const LEN: usize, T> MinLengthVec<LEN, T> {
@@ -99,7 +99,7 @@ impl<const LEN: usize, T> TryFrom<Vec<T>> for MinLengthVec<LEN, T> {
 
 /// Wrapper around a string for ensuring that a Uri is valid (using the `fluent-uri` crate). Derefs
 /// to the inner string after construction.
-#[derive(Debug, Serialize)]
+#[derive(Clone, Debug, Serialize)]
 pub struct Uri(String);
 
 impl Deref for Uri {

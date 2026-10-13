@@ -61,7 +61,7 @@ impl TemporalRegionBuilder {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum TemporalRegion {
     Period {
         from: i32,
