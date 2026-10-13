@@ -1,8 +1,13 @@
-mod builder;
+pub mod agent;
 pub mod country;
 pub mod enums;
 mod error;
-mod language;
+pub mod geometry;
+pub mod image;
+pub mod language;
+mod resource;
+pub mod temporal_region;
+pub mod types;
 
-pub use builder::ResourceBuilder;
 pub use error::Error;
+pub use resource::{Resource, ResourceBuilder};

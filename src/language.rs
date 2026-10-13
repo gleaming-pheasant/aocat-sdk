@@ -1108,6 +1108,28 @@ static LANGUAGES: [LanguageInner; Language::COUNT] = [
     },
 ];
 
+static ISO_639_1_LOOKUP: [Option<Language>; 676] = {
+    let mut table = [None; 676]; // 26*26 all possible pairs
+    let mut i = 0;
+
+    while i < LANGUAGES.len() {
+        let code = LANGUAGES[i].iso_639_1;
+        let b0 = code[0];
+        let b1 = code[1];
+
+        // Map ASCII bytes ('a'..='z') to range 0..25
+        let row = (b0 - b'a') as usize;
+        let col = (b1 - b'a') as usize;
+        let idx = row * 26 + col;
+
+        // Rust 1.56+ allows transmute in const contexts
+        table[idx] = Some(unsafe { std::mem::transmute(i as u8) });
+        i += 1;
+    }
+
+    table
+};
+
 impl Language {
     pub const COUNT: usize = 181;
 
@@ -1134,12 +1156,18 @@ impl Language {
             .try_into()
             .map_err(|_| Error::InvalidLanguageCode(code.to_string()))?;
 
-        let loc = LANGUAGES
-            .binary_search_by(|l| l.iso_639_1.cmp(&key))
-            .map_err(|_| Error::InvalidLanguageCode(code.to_string()))?;
+        let b0 = key[0].wrapping_sub(b'a');
+        let b1 = key[1].wrapping_sub(b'a');
 
-        // The enum's repr(u8) discriminants match the sorted table indices.
-        Ok(unsafe { std::mem::transmute(loc as u8) })
+        // Check if the bytes are valid ASCII letters
+        if b0 < 26 && b1 < 26 {
+            let index = (b0 as usize) * 26 + (b1 as usize);
+            if let Some(lang) = ISO_639_1_LOOKUP[index] {
+                return Ok(lang);
+            }
+        }
+
+        Err(Error::InvalidLanguageCode(code.to_string()))
     }
 }
 
