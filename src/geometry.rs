@@ -13,6 +13,12 @@ impl Geometry {
     }
 }
 
+impl From<geojson::Geometry> for Geometry {
+    fn from(geometry: geojson::Geometry) -> Self {
+        Geometry(geometry)
+    }
+}
+
 impl Serialize for Geometry {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
