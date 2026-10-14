@@ -17,14 +17,14 @@ use crate::types::{Agents, AriadneSubjects, DataTypes, NativeTypes, Uri};
 #[serde(bound(deserialize = "'de: 'a"), try_from = "ResourceBuilder")]
 pub struct Resource<'a> {
     resource_type: ResourceType,
-    access_rights: String,
-    access_policy: Option<String>,
-    original_id: String,
+    access_rights: Cow<'a, str>,
+    access_policy: Option<Cow<'a, str>>,
+    original_id: Cow<'a, str>,
     #[serde(default)]
-    identifiers: Vec<String>,
-    title: String,
-    description: Option<String>,
-    country: Country,
+    identifiers: Vec<Cow<'a, str>>,
+    title: Cow<'a, str>,
+    description: Option<Cow<'a, str>>,
+    country: Country<'a>,
     ariadne_subjects: AriadneSubjects,
     data_types: DataTypes,
     created: NaiveDateTime,
@@ -33,10 +33,10 @@ pub struct Resource<'a> {
     language: Language,
     landing_page: Uri<'a>,
     #[serde(default)]
-    named_places: Vec<String>,
-    native_subjects: Vec<String>, // not default, as mandatory if AO_Individual_Data_Resource
+    named_places: Vec<Cow<'a, str>>,
+    native_subjects: Vec<Cow<'a, str>>, // not default, as mandatory if AO_Individual_Data_Resource
     parent_id: Option<Cow<'a, str>>, // not default, as mandatory if AO_Individual_Data_Resource
-    native_types: NativeTypes,
+    native_types: NativeTypes<'a>,
     #[serde(default)]
     temporal_regions: Vec<TemporalRegion<'a>>,
     #[serde(default)]
@@ -64,19 +64,19 @@ pub struct ResourceBuilder<'a> {
     #[serde(default)]
     resource_type: Option<ResourceType>,
     #[serde(default)]
-    access_rights: Option<String>,
+    access_rights: Option<Cow<'a, str>>,
     #[serde(default)]
-    access_policy: Option<String>,
+    access_policy: Option<Cow<'a, str>>,
     #[serde(default)]
-    original_id: Option<String>,
+    original_id: Option<Cow<'a, str>>,
     #[serde(default)]
-    identifiers: Vec<String>,
+    identifiers: Vec<Cow<'a, str>>,
     #[serde(default)]
-    title: Option<String>,
+    title: Option<Cow<'a, str>>,
     #[serde(default)]
-    description: Option<String>,
+    description: Option<Cow<'a, str>>,
     #[serde(default)]
-    country: Option<Country>,
+    country: Option<Country<'a>>,
     #[serde(default)]
     ariadne_subjects: Vec<AriadneSubject>,
     #[serde(default)]
@@ -90,15 +90,15 @@ pub struct ResourceBuilder<'a> {
     #[serde(default)]
     language: Option<Language>,
     #[serde(default)]
-    landing_page: Option<String>,
+    landing_page: Option<Cow<'a, str>>,
     #[serde(default)]
-    named_places: Vec<String>,
+    named_places: Vec<Cow<'a, str>>,
     #[serde(default)]
-    native_subjects: Vec<String>,
+    native_subjects: Vec<Cow<'a, str>>,
     #[serde(default)]
     parent_id: Option<Cow<'a, str>>,
     #[serde(default)]
-    native_types: Vec<String>,
+    native_types: Vec<Cow<'a, str>>,
     #[serde(default)]
     temporal_regions: Vec<TemporalRegion<'a>>,
     #[serde(default)]
@@ -114,7 +114,7 @@ pub struct ResourceBuilder<'a> {
     #[serde(default)]
     responsibles: Vec<Agent<'a>>,
     #[serde(default)]
-    images: Vec<Image>,
+    images: Vec<Image<'a>>,
 }
 
 impl<'a> ResourceBuilder<'a> {
@@ -127,42 +127,42 @@ impl<'a> ResourceBuilder<'a> {
         self
     }
 
-    pub fn set_access_rights(mut self, value: String) -> Self {
-        self.access_rights = Some(value);
+    pub fn set_access_rights(mut self, value: impl Into<Cow<'a, str>>) -> Self {
+        self.access_rights = Some(value.into());
         self
     }
 
-    pub fn set_access_policy(mut self, value: String) -> Self {
-        self.access_policy = Some(value);
+    pub fn set_access_policy(mut self, value: impl Into<Cow<'a, str>>) -> Self {
+        self.access_policy = Some(value.into());
         self
     }
 
-    pub fn set_original_id(mut self, value: String) -> Self {
-        self.original_id = Some(value);
+    pub fn set_original_id(mut self, value: impl Into<Cow<'a, str>>) -> Self {
+        self.original_id = Some(value.into());
         self
     }
 
-    pub fn set_identifiers(mut self, value: Vec<String>) -> Self {
+    pub fn set_identifiers(mut self, value: Vec<Cow<'a, str>>) -> Self {
         self.identifiers = value;
         self
     }
 
-    pub fn add_identifier(mut self, value: String) -> Self {
-        self.identifiers.push(value);
+    pub fn add_identifier(mut self, value: impl Into<Cow<'a, str>>) -> Self {
+        self.identifiers.push(value.into());
         self
     }
 
-    pub fn set_title(mut self, value: String) -> Self {
-        self.title = Some(value);
+    pub fn set_title(mut self, value: impl Into<Cow<'a, str>>) -> Self {
+        self.title = Some(value.into());
         self
     }
 
-    pub fn set_description(mut self, value: String) -> Self {
-        self.description = Some(value);
+    pub fn set_description(mut self, value: impl Into<Cow<'a, str>>) -> Self {
+        self.description = Some(value.into());
         self
     }
 
-    pub fn set_country(mut self, value: Country) -> Self {
+    pub fn set_country(mut self, value: Country<'a>) -> Self {
         self.country = Some(value);
         self
     }
@@ -207,28 +207,28 @@ impl<'a> ResourceBuilder<'a> {
         self
     }
 
-    pub fn set_landing_page(mut self, value: String) -> Self {
-        self.landing_page = Some(value);
+    pub fn set_landing_page(mut self, value: impl Into<Cow<'a, str>>) -> Self {
+        self.landing_page = Some(value.into());
         self
     }
 
-    pub fn set_named_places(mut self, value: Vec<String>) -> Self {
+    pub fn set_named_places(mut self, value: Vec<Cow<'a, str>>) -> Self {
         self.named_places = value;
         self
     }
 
-    pub fn add_named_place(mut self, value: String) -> Self {
-        self.named_places.push(value);
+    pub fn add_named_place(mut self, value: impl Into<Cow<'a, str>>) -> Self {
+        self.named_places.push(value.into());
         self
     }
 
-    pub fn set_native_subjects(mut self, value: Vec<String>) -> Self {
+    pub fn set_native_subjects(mut self, value: Vec<Cow<'a, str>>) -> Self {
         self.native_subjects = value;
         self
     }
 
-    pub fn add_native_subject(mut self, value: String) -> Self {
-        self.native_subjects.push(value);
+    pub fn add_native_subject(mut self, value: impl Into<Cow<'a, str>>) -> Self {
+        self.native_subjects.push(value.into());
         self
     }
 
@@ -237,13 +237,13 @@ impl<'a> ResourceBuilder<'a> {
         self
     }
 
-    pub fn set_native_types(mut self, value: Vec<String>) -> Self {
+    pub fn set_native_types(mut self, value: Vec<Cow<'a, str>>) -> Self {
         self.native_types = value;
         self
     }
 
-    pub fn add_native_type(mut self, value: String) -> Self {
-        self.native_types.push(value);
+    pub fn add_native_type(mut self, value: impl Into<Cow<'a, str>>) -> Self {
+        self.native_types.push(value.into());
         self
     }
 
@@ -317,12 +317,12 @@ impl<'a> ResourceBuilder<'a> {
         self
     }
 
-    pub fn set_images(mut self, value: Vec<Image>) -> Self {
+    pub fn set_images(mut self, value: Vec<Image<'a>>) -> Self {
         self.images = value;
         self
     }
 
-    pub fn add_image(mut self, value: Image) -> Self {
+    pub fn add_image(mut self, value: Image<'a>) -> Self {
         self.images.push(value);
         self
     }

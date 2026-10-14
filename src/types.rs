@@ -12,8 +12,8 @@ use crate::enums::{AriadneSubject, DataType};
 pub type Agents<'a> = MinLengthVec<1, Agent<'a>>;
 pub type AriadneSubjects = MinLengthVec<1, AriadneSubject>;
 pub type DataTypes = MinLengthVec<1, DataType>;
-pub type NativeSubjects = MinLengthVec<1, String>;
-pub type NativeTypes = MinLengthVec<1, String>;
+pub type NativeSubjects<'a> = MinLengthVec<1, Cow<'a, str>>;
+pub type NativeTypes<'a> = MinLengthVec<1, Cow<'a, str>>;
 
 #[derive(Clone, Debug, Serialize)]
 pub struct MinLengthVec<const LEN: usize, T>(Vec<T>);
@@ -108,6 +108,17 @@ impl<'a> Deref for Uri<'a> {
 
     fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+impl<'a> TryFrom<Cow<'a, str>> for Uri<'a> {
+    type Error = Error;
+
+    fn try_from(value: Cow<'a, str>) -> Result<Self, Self::Error> {
+        match value {
+            Cow::Borrowed(s) => Uri::try_from(s),
+            Cow::Owned(s) => Uri::try_from(s)
+        }
     }
 }
 

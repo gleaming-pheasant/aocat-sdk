@@ -1,14 +1,16 @@
+use std::borrow::Cow;
+
 use serde::{Deserialize, Serialize};
 
 use crate::Error;
 
 #[derive(Debug, Default)]
-pub struct CountryBuilder {
-    name: Option<String>,
+pub struct CountryBuilder<'a> {
+    name: Option<Cow<'a, str>>,
     qid: Option<u32>,
 }
 
-impl CountryBuilder {
+impl<'a> CountryBuilder<'a> {
     pub fn new() -> Self {
         CountryBuilder {
             name: None,
@@ -16,8 +18,8 @@ impl CountryBuilder {
         }
     }
 
-    pub fn set_name(mut self, name: String) -> Self {
-        self.name = Some(name);
+    pub fn set_name(mut self, name: impl Into<Cow<'a, str>>) -> Self {
+        self.name = Some(name.into());
         self
     }
 
@@ -26,7 +28,7 @@ impl CountryBuilder {
         self
     }
 
-    pub fn build(self) -> Result<Country, Error> {
+    pub fn build(self) -> Result<Country<'a>, Error> {
         if self.name.is_none() {
             return Err(Error::MissingField("name"));
         }
@@ -43,14 +45,17 @@ impl CountryBuilder {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct Country {
-    name: String,
+pub struct Country<'a> {
+    name: Cow<'a, str>,
     qid: u32,
 }
 
-impl Country {
-    pub fn new(name: String, qid: u32) -> Self {
-        Country { name, qid }
+impl<'a> Country<'a> {
+    pub fn new(name: impl Into<Cow<'a, str>>, qid: u32) -> Self {
+        Country {
+            name: name.into(),
+            qid
+        }
     }
 
     pub fn name(&self) -> &str {

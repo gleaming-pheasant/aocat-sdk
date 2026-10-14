@@ -1220,6 +1220,14 @@ impl Serialize for Language {
     }
 }
 
+impl TryFrom<&str> for Language {
+    type Error = Error;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        Language::try_from_iso_639_1(value)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

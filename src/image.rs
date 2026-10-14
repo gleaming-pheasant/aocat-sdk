@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use serde::ser::{SerializeSeq, Serializer};
 use serde::{Deserialize, Serialize};
 
@@ -6,31 +8,31 @@ use crate::{Error, types::Uri};
 /// Serves as a builder, but can be built from new. Each image is built into a private controlled
 /// type when added to the `Images` list (which is not mandatory, and has no minimum length).
 #[derive(Clone, Debug, Default, Deserialize)]
-pub struct Image {
-    image_url: Option<String>,
-    iiif_manifest_url: Option<String>,
+pub struct Image<'a> {
+    image_url: Option<Cow<'a, str>>,
+    iiif_manifest_url: Option<Cow<'a, str>>,
     primary: bool, // default is `false`
 }
 
-impl Image {
+impl<'a> Image<'a> {
     pub fn new(
-        image_url: Option<String>,
-        iiif_manifest_url: Option<String>,
+        image_url: Option<impl Into<Cow<'a, str>>>,
+        iiif_manifest_url: Option<impl Into<Cow<'a, str>>>,
         primary: bool,
     ) -> Self {
         Image {
-            image_url,
-            iiif_manifest_url,
+            image_url: image_url.map(Into::into),
+            iiif_manifest_url: iiif_manifest_url.map(Into::into),
             primary,
         }
     }
 
-    pub fn set_image_url(&mut self, image_url: Option<String>) {
-        self.image_url = image_url;
+    pub fn set_image_url(&mut self, image_url: Option<impl Into<Cow<'a, str>>>) {
+        self.image_url = image_url.map(Into::into);
     }
 
-    pub fn set_iiif_manifest_url(&mut self, iiif_manifest_url: Option<String>) {
-        self.iiif_manifest_url = iiif_manifest_url;
+    pub fn set_iiif_manifest_url(&mut self, iiif_manifest_url: Option<impl Into<Cow<'a, str>>>) {
+        self.iiif_manifest_url = iiif_manifest_url.map(Into::into);
     }
 
     pub fn set_primary(&mut self, primary: bool) {
@@ -96,10 +98,10 @@ impl<'a> InnerImage<'a> {
     }
 }
 
-impl<'a> TryFrom<Image> for InnerImage<'a> {
+impl<'a> TryFrom<Image<'a>> for InnerImage<'a> {
     type Error = Error;
 
-    fn try_from(value: Image) -> Result<Self, Self::Error> {
+    fn try_from(value: Image<'a>) -> Result<Self, Self::Error> {
         match (value.image_url(), value.iiif_manifest_url()) {
             (Some(image_url), Some(iiif_manifest_url)) => Ok(InnerImage::Both {
                 image_url: Uri::try_from(image_url.to_string())?,
@@ -133,10 +135,10 @@ impl<'a> Serialize for Images<'a> {
     }
 }
 
-impl<'a> TryFrom<Vec<Image>> for Images<'a> {
+impl<'a> TryFrom<Vec<Image<'a>>> for Images<'a> {
     type Error = crate::Error;
 
-    fn try_from(v: Vec<Image>) -> Result<Self, Self::Error> {
+    fn try_from(v: Vec<Image<'a>>) -> Result<Self, Self::Error> {
         let mut images = Vec::with_capacity(v.len());
         let mut primary_index: Option<usize> = None;
 

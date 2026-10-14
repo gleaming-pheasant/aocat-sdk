@@ -30,7 +30,7 @@ impl<'a> Agent<'a> {
         &self.name
     }
 
-    pub fn identifier(&self) -> Option<&Uri> {
+    pub fn identifier(&self) -> Option<&Uri<'_>> {
         self.identifier.as_ref()
     }
 }
