@@ -58,6 +58,10 @@ impl<'a> Country<'a> {
         }
     }
 
+    pub const fn new_const(name: &'static str, qid: u32) -> Self<'static> {
+        Country { name: Cow::Borrowed(name), qid }
+    }
+
     pub fn name(&self) -> &str {
         &self.name
     }
