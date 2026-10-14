@@ -77,6 +77,28 @@ pub enum TemporalRegion<'a> {
     },
 }
 
+impl<'a> TemporalRegion<'a> {
+    pub fn builder() -> TemporalRegionBuilder<'a> {
+        TemporalRegionBuilder::new()
+    }
+
+    pub const fn new_period(from: i32, until: Option<i32>) -> Self {
+        TemporalRegion::Period { from, until }
+    }
+
+    pub const fn new_name(period_name: &'static str) -> Self {
+        TemporalRegion::Name(Cow::Borrowed(period_name))
+    }
+
+    pub const fn new_both(from: i32, until: Option<i32>, period_name: &'static str) -> Self {
+        TemporalRegion::Both {
+            from,
+            until,
+            period_name: Cow::Borrowed(period_name)
+        }
+    }
+}
+
 impl<'a> Serialize for TemporalRegion<'a> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
