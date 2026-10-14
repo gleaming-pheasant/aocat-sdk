@@ -50,16 +50,21 @@ pub struct Country<'a> {
     qid: u32,
 }
 
+impl Country<'static> {
+    pub const fn new_const(name: &'static str, qid: u32) -> Self {
+        Country {
+            name: Cow::Borrowed(name),
+            qid
+        }
+    }
+}
+
 impl<'a> Country<'a> {
     pub fn new(name: impl Into<Cow<'a, str>>, qid: u32) -> Self {
         Country {
             name: name.into(),
             qid
         }
-    }
-
-    pub const fn new_const(name: &'static str, qid: u32) -> Self<'static> {
-        Country { name: Cow::Borrowed(name), qid }
     }
 
     pub fn name(&self) -> &str {

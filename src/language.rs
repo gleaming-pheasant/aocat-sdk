@@ -1171,6 +1171,12 @@ impl Language {
     }
 }
 
+impl Default for Language {
+    fn default() -> Self {
+        Self::En
+    }
+}
+
 impl<'de> Deserialize<'de> for Language {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
