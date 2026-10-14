@@ -51,12 +51,12 @@ impl Image {
 }
 
 #[derive(Debug)]
-enum InnerImage {
-    Image(Uri),
-    IiifManifest(Uri),
+enum InnerImage<'a> {
+    Image(Uri<'a>),
+    IiifManifest(Uri<'a>),
     Both {
-        image_url: Uri,
-        iiif_manifest_url: Uri,
+        image_url: Uri<'a>,
+        iiif_manifest_url: Uri<'a>,
     },
 }
 
@@ -65,14 +65,14 @@ enum InnerImage {
 #[derive(Serialize)]
 struct ImageOut<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
-    image_url: Option<&'a Uri>,
+    image_url: Option<&'a Uri<'a>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    iiif_manifest_url: Option<&'a Uri>,
+    iiif_manifest_url: Option<&'a Uri<'a>>,
     primary: bool,
 }
 
-impl InnerImage {
-    fn as_out(&self, primary: bool) -> ImageOut<'_> {
+impl<'a> InnerImage<'a> {
+    fn as_out(&'a self, primary: bool) -> ImageOut<'a> {
         match self {
             InnerImage::Image(i) => ImageOut {
                 image_url: Some(i),
@@ -96,7 +96,7 @@ impl InnerImage {
     }
 }
 
-impl TryFrom<Image> for InnerImage {
+impl<'a> TryFrom<Image> for InnerImage<'a> {
     type Error = Error;
 
     fn try_from(value: Image) -> Result<Self, Self::Error> {
@@ -115,12 +115,12 @@ impl TryFrom<Image> for InnerImage {
 }
 
 #[derive(Debug, Default)]
-pub struct Images {
-    images: Vec<InnerImage>,
+pub struct Images<'a> {
+    images: Vec<InnerImage<'a>>,
     primary_index: usize,
 }
 
-impl Serialize for Images {
+impl<'a> Serialize for Images<'a> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -133,7 +133,7 @@ impl Serialize for Images {
     }
 }
 
-impl TryFrom<Vec<Image>> for Images {
+impl<'a> TryFrom<Vec<Image>> for Images<'a> {
     type Error = crate::Error;
 
     fn try_from(v: Vec<Image>) -> Result<Self, Self::Error> {

@@ -1,14 +1,15 @@
+use std::borrow::Cow;
 use std::ops::Deref;
 
 use fluent_uri::UriRef;
-use serde::de::{self, Deserializer, Visitor};
+use serde::de::{self, Deserializer};
 use serde::{Deserialize, Serialize};
 
 use crate::Error;
 use crate::agent::Agent;
 use crate::enums::{AriadneSubject, DataType};
 
-pub type Agents = MinLengthVec<1, Agent>;
+pub type Agents<'a> = MinLengthVec<1, Agent<'a>>;
 pub type AriadneSubjects = MinLengthVec<1, AriadneSubject>;
 pub type DataTypes = MinLengthVec<1, DataType>;
 pub type NativeSubjects = MinLengthVec<1, String>;
@@ -100,63 +101,148 @@ impl<const LEN: usize, T> TryFrom<Vec<T>> for MinLengthVec<LEN, T> {
 /// Wrapper around a string for ensuring that a Uri is valid (using the `fluent-uri` crate). Derefs
 /// to the inner string after construction.
 #[derive(Clone, Debug, Serialize)]
-pub struct Uri(String);
+pub struct Uri<'a>(Cow<'a, str>);
 
-impl Deref for Uri {
-    type Target = String;
+impl<'a> Deref for Uri<'a> {
+    type Target = str;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl TryFrom<String> for Uri {
+impl<'a, 's> TryFrom<&'s str> for Uri<'a>
+where
+    's: 'a
+{
     type Error = Error;
 
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        if UriRef::parse(value.trim()).is_err() {
-            return Err(Error::InvalidUri(value));
+    /// This implementation does not catch empty strings, on the basis that individual structs can 
+    /// deserialize these values as `None` if desired.
+    fn try_from(value: &'s str) -> Result<Self, Self::Error> {
+        let (start_bytes, trimmed_byte_len) = {
+            let trimmed = value.trim();
+            
+            if trimmed.is_empty() {
+                return Err(Error::InvalidUri(value.to_string()));
+            }
+
+            let trimmed_byte_len = trimmed.len();
+
+            /* Early return if can't be parsed as a Uri. Returns human-readable error.
+                * Comes after byte_len check, as this is a more expensive validation check.
+                * Maps a Error::InvalidUri error directly, to ensure format match on 
+                * `TryFrom<String>` implementation used by the other `visit_...` functions. */
+            if let Err(_) = UriRef::parse(trimmed) {
+                return Err(Error::InvalidUri(value.to_string()))
+            }
+
+            /* trimmed will only ever start at the same ptr as s or later, so tells us how 
+                * far along to push the trimmed buffer. */
+            let start = trimmed.as_ptr() as usize - value.as_ptr() as usize;
+            (start, trimmed_byte_len)
+        };
+
+        if trimmed_byte_len == value.len() { // wasn't shorter when trimmed (i.e. no whitespace)
+            Ok(Uri(Cow::Borrowed(value)))
+        } else { // was shorter when trimmed, return just the slice for the inner content
+            Ok(Uri(Cow::Borrowed(&value[start_bytes..start_bytes + trimmed_byte_len])))
         }
-        Ok(Uri(value))
     }
 }
 
-impl<'de> Deserialize<'de> for Uri {
+impl<'a> TryFrom<String> for Uri<'a> {
+    type Error = Error;
+
+    /// This implementation does not catch empty strings, on the basis that individual structs can 
+    /// deserialize these values as `None` if desired.
+    fn try_from(mut value: String) -> Result<Self, Self::Error> {
+        let (start_bytes, byte_len) = {
+            let trimmed = value.trim();
+            
+            if trimmed.is_empty() {
+                return Err(Error::InvalidUri(value.to_string()));
+            }
+
+            let byte_len = trimmed.len();
+
+            // Early return if can't be parsed as a Uri. Returns human-readable error.
+            // Comes after byte_len check, as this is a more expensive validation check.
+            if let Err(_) = UriRef::parse(trimmed) {
+                return Err(Error::InvalidUri(value.to_string()))
+            }
+
+            // trimmed will only ever start at the same ptr as s or later, so tells us how far along 
+            // to push the trimmed buffer.
+            let start = trimmed.as_ptr() as usize - value.as_ptr() as usize;
+                (start, byte_len)
+        };
+
+        if byte_len == value.len() { // wasn't shorted when trimmed
+            Ok(Uri(Cow::Owned(value)))
+        } else { // was shorter when trimmed
+            value.truncate(start_bytes + byte_len); // truncate in place.
+            value.drain(..start_bytes);
+            Ok(Uri(Cow::Owned(value)))
+        }
+    }
+}
+
+impl<'de, 'a> Deserialize<'de> for Uri<'a>
+where
+    'de: 'a
+{
+    // Visitor implementations are relatively costly here (references are cloned before any 
+    // validation). This has been done to reduce boilerplate and make the code more readable.
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
-        D: Deserializer<'de>,
+        D: serde::Deserializer<'de>
     {
-        pub struct UriVisitor;
+        struct UriVisitor;
 
-        impl<'de> Visitor<'de> for UriVisitor {
-            type Value = Uri;
+        impl<'de> serde::de::Visitor<'de> for UriVisitor {
+            type Value = Uri<'de>;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-                formatter.write_str("a valid URI string")
+                write!(formatter, "A valid URI")
             }
 
+            // definitely borrowed. contiguous bytes with no escapes to skip in the buffer.
             fn visit_borrowed_str<E>(self, v: &'de str) -> Result<Self::Value, E>
             where
-                E: de::Error,
+                E: serde::de::Error,
             {
-                Uri::try_from(v.to_string()).map_err(de::Error::custom)
+                Uri::try_from(v)
+                    .map_err(|e| serde::de::Error::custom(e))
             }
 
-            fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+            /* temporary, holding buffer that will be dropped quickly (e.g. if serde_json has 
+             * replaced \r\n with actual bytes, therefore making the buffer non-contiguous).
+             * Our only real choice here is to cast it straight to a `String`. */
+            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
             where
-                E: de::Error,
+                E: serde::de::Error,
             {
-                Uri::try_from(value.to_string()).map_err(de::Error::custom)
+                let v = v.to_string();
+
+                // Pass the String straight to TryFrom. Error messages return the same user-facing 
+                // message and type through mapping.
+                Uri::try_from(v)
+                    .map_err(|e| serde::de::Error::custom(e))
             }
 
+            // definitely owned.
             fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
             where
-                E: de::Error,
+                E: serde::de::Error,
             {
-                Uri::try_from(v).map_err(de::Error::custom)
+                // Pass the String straight to TryFrom. Error messages return the same user-facing 
+                // message and type through mapping.
+                Uri::try_from(v)
+                    .map_err(|e| serde::de::Error::custom(e))
             }
         }
 
-        deserializer.deserialize_string(UriVisitor)
+        deserializer.deserialize_str(UriVisitor)
     }
 }

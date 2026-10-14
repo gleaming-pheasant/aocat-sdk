@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use serde::Deserialize;
 use serde::de::{self, IgnoredAny, MapAccess, Visitor};
 use serde::ser::{Serialize, SerializeStruct, Serializer};
@@ -7,13 +9,13 @@ use crate::Error;
 const FIELDS: &[&str] = &["from", "until", "period_name"];
 
 #[derive(Debug, Default)]
-pub struct TemporalRegionBuilder {
+pub struct TemporalRegionBuilder<'a> {
     from: Option<i32>,
     until: Option<i32>,
-    period_name: Option<String>,
+    period_name: Option<Cow<'a, str>>,
 }
 
-impl TemporalRegionBuilder {
+impl<'a> TemporalRegionBuilder<'a> {
     pub fn new() -> Self {
         TemporalRegionBuilder {
             from: None,
@@ -32,12 +34,12 @@ impl TemporalRegionBuilder {
         self
     }
 
-    pub fn set_period_name(mut self, period_name: String) -> Self {
-        self.period_name = Some(period_name);
+    pub fn set_period_name(mut self, period_name: impl Into<Cow<'a, str>>) -> Self {
+        self.period_name = Some(period_name.into());
         self
     }
 
-    pub fn build(self) -> Result<TemporalRegion, Error> {
+    pub fn build(self) -> Result<TemporalRegion<'a>, Error> {
         match (self.from, self.until, self.period_name) {
             (Some(from), Some(until), Some(period_name)) => Ok(TemporalRegion::Both {
                 from,
@@ -62,20 +64,20 @@ impl TemporalRegionBuilder {
 }
 
 #[derive(Clone, Debug)]
-pub enum TemporalRegion {
+pub enum TemporalRegion<'a> {
     Period {
         from: i32,
         until: Option<i32>,
     },
-    Name(String),
+    Name(Cow<'a, str>),
     Both {
         from: i32,
         until: Option<i32>,
-        period_name: String,
+        period_name: Cow<'a, str>,
     },
 }
 
-impl Serialize for TemporalRegion {
+impl<'a> Serialize for TemporalRegion<'a> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -107,15 +109,15 @@ impl Serialize for TemporalRegion {
     }
 }
 
-impl<'de> Deserialize<'de> for TemporalRegion {
+impl<'de: 'a, 'a> Deserialize<'de> for TemporalRegion<'a> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
-        D: serde::Deserializer<'de>,
+        D: serde::Deserializer<'de>
     {
         struct TemporalRegionVisitor;
 
         impl<'de> Visitor<'de> for TemporalRegionVisitor {
-            type Value = TemporalRegion;
+            type Value = TemporalRegion<'de>;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
                 formatter.write_str("an object with `from`, `until`, and/or `period_name` fields")
@@ -129,8 +131,8 @@ impl<'de> Deserialize<'de> for TemporalRegion {
                 let mut until = None;
                 let mut period_name = None;
 
-                while let Some(key) = map.next_key::<String>()? {
-                    match key.as_str() {
+                while let Some(key) = map.next_key::<Cow<'de, str>>()? {
+                    match key.as_ref() {
                         "from" => {
                             if from.is_some() {
                                 return Err(de::Error::duplicate_field("from"));
@@ -147,7 +149,7 @@ impl<'de> Deserialize<'de> for TemporalRegion {
                             if period_name.is_some() {
                                 return Err(de::Error::duplicate_field("period_name"));
                             }
-                            period_name = Some(map.next_value::<String>()?);
+                            period_name = Some(map.next_value::<Cow<'de, str>>()?);
                         }
                         _ => {
                             let _: IgnoredAny = map.next_value()?;

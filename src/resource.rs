@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 
@@ -12,8 +14,8 @@ use crate::temporal_region::TemporalRegion;
 use crate::types::{Agents, AriadneSubjects, DataTypes, NativeTypes, Uri};
 
 #[derive(Debug, Deserialize, Serialize)]
-#[serde(try_from = "ResourceBuilder")]
-pub struct Resource {
+#[serde(bound(deserialize = "'de: 'a"), try_from = "ResourceBuilder")]
+pub struct Resource<'a> {
     resource_type: ResourceType,
     access_rights: String,
     access_policy: Option<String>,
@@ -29,35 +31,36 @@ pub struct Resource {
     issued: NaiveDateTime,
     modified: NaiveDateTime,
     language: Language,
-    landing_page: Uri,
+    landing_page: Uri<'a>,
     #[serde(default)]
     named_places: Vec<String>,
     native_subjects: Vec<String>, // not default, as mandatory if AO_Individual_Data_Resource
-    parent_id: Option<String>,    // not default, as mandatory if AO_Individual_Data_Resource
+    parent_id: Option<Cow<'a, str>>, // not default, as mandatory if AO_Individual_Data_Resource
     native_types: NativeTypes,
     #[serde(default)]
-    temporal_regions: Vec<TemporalRegion>,
+    temporal_regions: Vec<TemporalRegion<'a>>,
     #[serde(default)]
     geometries: Vec<Geometry>,
-    publishers: Agents,
-    owners: Agents,
-    contributors: Agents,
-    creators: Agents,
-    responsibles: Agents,
+    publishers: Agents<'a>,
+    owners: Agents<'a>,
+    contributors: Agents<'a>,
+    creators: Agents<'a>,
+    responsibles: Agents<'a>,
     #[serde(default)]
-    images: Images,
+    images: Images<'a>,
 }
 
-impl TryFrom<ResourceBuilder> for Resource {
+impl<'a> TryFrom<ResourceBuilder<'a>> for Resource<'a> {
     type Error = Error;
 
-    fn try_from(value: ResourceBuilder) -> Result<Self, Self::Error> {
+    fn try_from(value: ResourceBuilder<'a>) -> Result<Self, Self::Error> {
         value.build()
     }
 }
 
 #[derive(Debug, Default, Deserialize)]
-pub struct ResourceBuilder {
+#[serde(bound(deserialize = "'de: 'a"))]
+pub struct ResourceBuilder<'a> {
     #[serde(default)]
     resource_type: Option<ResourceType>,
     #[serde(default)]
@@ -93,28 +96,28 @@ pub struct ResourceBuilder {
     #[serde(default)]
     native_subjects: Vec<String>,
     #[serde(default)]
-    parent_id: Option<String>,
+    parent_id: Option<Cow<'a, str>>,
     #[serde(default)]
     native_types: Vec<String>,
     #[serde(default)]
-    temporal_regions: Vec<TemporalRegion>,
+    temporal_regions: Vec<TemporalRegion<'a>>,
     #[serde(default)]
     geometries: Vec<Geometry>,
     #[serde(default)]
-    publishers: Vec<Agent>,
+    publishers: Vec<Agent<'a>>,
     #[serde(default)]
-    owners: Vec<Agent>,
+    owners: Vec<Agent<'a>>,
     #[serde(default)]
-    contributors: Vec<Agent>,
+    contributors: Vec<Agent<'a>>,
     #[serde(default)]
-    creators: Vec<Agent>,
+    creators: Vec<Agent<'a>>,
     #[serde(default)]
-    responsibles: Vec<Agent>,
+    responsibles: Vec<Agent<'a>>,
     #[serde(default)]
     images: Vec<Image>,
 }
 
-impl ResourceBuilder {
+impl<'a> ResourceBuilder<'a> {
     pub fn new() -> Self {
         Default::default()
     }
@@ -229,8 +232,8 @@ impl ResourceBuilder {
         self
     }
 
-    pub fn set_parent_id(mut self, value: String) -> Self {
-        self.parent_id = Some(value);
+    pub fn set_parent_id(mut self, value: impl Into<Cow<'a, str>>) -> Self {
+        self.parent_id = Some(value.into());
         self
     }
 
@@ -244,12 +247,12 @@ impl ResourceBuilder {
         self
     }
 
-    pub fn set_temporal_regions(mut self, value: Vec<TemporalRegion>) -> Self {
+    pub fn set_temporal_regions(mut self, value: Vec<TemporalRegion<'a>>) -> Self {
         self.temporal_regions = value;
         self
     }
 
-    pub fn add_temporal_region(mut self, value: TemporalRegion) -> Self {
+    pub fn add_temporal_region(mut self, value: TemporalRegion<'a>) -> Self {
         self.temporal_regions.push(value);
         self
     }
@@ -264,52 +267,52 @@ impl ResourceBuilder {
         self
     }
 
-    pub fn set_publishers(mut self, value: Vec<Agent>) -> Self {
+    pub fn set_publishers(mut self, value: Vec<Agent<'a>>) -> Self {
         self.publishers = value;
         self
     }
 
-    pub fn add_publisher(mut self, value: Agent) -> Self {
+    pub fn add_publisher(mut self, value: Agent<'a>) -> Self {
         self.publishers.push(value);
         self
     }
 
-    pub fn set_owners(mut self, value: Vec<Agent>) -> Self {
+    pub fn set_owners(mut self, value: Vec<Agent<'a>>) -> Self {
         self.owners = value;
         self
     }
 
-    pub fn add_owner(mut self, value: Agent) -> Self {
+    pub fn add_owner(mut self, value: Agent<'a>) -> Self {
         self.owners.push(value);
         self
     }
 
-    pub fn set_contributors(mut self, value: Vec<Agent>) -> Self {
+    pub fn set_contributors(mut self, value: Vec<Agent<'a>>) -> Self {
         self.contributors = value;
         self
     }
 
-    pub fn add_contributor(mut self, value: Agent) -> Self {
+    pub fn add_contributor(mut self, value: Agent<'a>) -> Self {
         self.contributors.push(value);
         self
     }
 
-    pub fn set_creators(mut self, value: Vec<Agent>) -> Self {
+    pub fn set_creators(mut self, value: Vec<Agent<'a>>) -> Self {
         self.creators = value;
         self
     }
 
-    pub fn add_creator(mut self, value: Agent) -> Self {
+    pub fn add_creator(mut self, value: Agent<'a>) -> Self {
         self.creators.push(value);
         self
     }
 
-    pub fn set_responsibles(mut self, value: Vec<Agent>) -> Self {
+    pub fn set_responsibles(mut self, value: Vec<Agent<'a>>) -> Self {
         self.responsibles = value;
         self
     }
 
-    pub fn add_responsible(mut self, value: Agent) -> Self {
+    pub fn add_responsible(mut self, value: Agent<'a>) -> Self {
         self.responsibles.push(value);
         self
     }
@@ -324,7 +327,7 @@ impl ResourceBuilder {
         self
     }
 
-    pub fn build(self) -> Result<Resource, Error> {
+    pub fn build(self) -> Result<Resource<'a>, Error> {
         if self.resource_type == Some(ResourceType::Individual) && self.native_subjects.is_empty() {
             return Err(Error::MissingField(
                 "native_subjects (required for AO_Individual_Data_Resource)",
