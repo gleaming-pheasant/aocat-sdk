@@ -86,11 +86,27 @@ impl<'a> TemporalRegion<'a> {
         TemporalRegion::Period { from, until }
     }
 
-    pub const fn new_name(period_name: &'static str) -> Self {
+    pub fn new_name(period_name: impl Into<Cow<'a, str>>) -> Self {
+        TemporalRegion::Name(period_name.into())
+    }
+
+    pub const fn new_const_name(period_name: &'static str) -> Self {
         TemporalRegion::Name(Cow::Borrowed(period_name))
     }
 
-    pub const fn new_both(from: i32, until: Option<i32>, period_name: &'static str) -> Self {
+    pub fn new_both(
+        from: i32,
+        until: Option<i32>,
+        period_name: impl Into<Cow<'a, str>>,
+    ) -> Self {
+        TemporalRegion::Both {
+            from,
+            until,
+            period_name: period_name.into(),
+        }
+    }
+
+    pub const fn new_const_both(from: i32, until: Option<i32>, period_name: &'static str) -> Self {
         TemporalRegion::Both {
             from,
             until,
