@@ -94,11 +94,7 @@ impl<'a> TemporalRegion<'a> {
         TemporalRegion::Name(Cow::Borrowed(period_name))
     }
 
-    pub fn new_both(
-        from: i32,
-        until: Option<i32>,
-        period_name: impl Into<Cow<'a, str>>,
-    ) -> Self {
+    pub fn new_both(from: i32, until: Option<i32>, period_name: impl Into<Cow<'a, str>>) -> Self {
         TemporalRegion::Both {
             from,
             until,
@@ -110,7 +106,7 @@ impl<'a> TemporalRegion<'a> {
         TemporalRegion::Both {
             from,
             until,
-            period_name: Cow::Borrowed(period_name)
+            period_name: Cow::Borrowed(period_name),
         }
     }
 }
@@ -150,7 +146,7 @@ impl<'a> Serialize for TemporalRegion<'a> {
 impl<'de: 'a, 'a> Deserialize<'de> for TemporalRegion<'a> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
-        D: serde::Deserializer<'de>
+        D: serde::Deserializer<'de>,
     {
         struct TemporalRegionVisitor;
 

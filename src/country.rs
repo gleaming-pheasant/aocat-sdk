@@ -54,7 +54,7 @@ impl Country<'static> {
     pub const fn new_const(name: &'static str, qid: u32) -> Self {
         Country {
             name: Cow::Borrowed(name),
-            qid
+            qid,
         }
     }
 }
@@ -63,7 +63,7 @@ impl<'a> Country<'a> {
     pub fn new(name: impl Into<Cow<'a, str>>, qid: u32) -> Self {
         Country {
             name: name.into(),
-            qid
+            qid,
         }
     }
 

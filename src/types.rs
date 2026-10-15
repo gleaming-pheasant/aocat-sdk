@@ -117,23 +117,23 @@ impl<'a> TryFrom<Cow<'a, str>> for Uri<'a> {
     fn try_from(value: Cow<'a, str>) -> Result<Self, Self::Error> {
         match value {
             Cow::Borrowed(s) => Uri::try_from(s),
-            Cow::Owned(s) => Uri::try_from(s)
+            Cow::Owned(s) => Uri::try_from(s),
         }
     }
 }
 
 impl<'a, 's> TryFrom<&'s str> for Uri<'a>
 where
-    's: 'a
+    's: 'a,
 {
     type Error = Error;
 
-    /// This implementation does not catch empty strings, on the basis that individual structs can 
+    /// This implementation does not catch empty strings, on the basis that individual structs can
     /// deserialize these values as `None` if desired.
     fn try_from(value: &'s str) -> Result<Self, Self::Error> {
         let (start_bytes, trimmed_byte_len) = {
             let trimmed = value.trim();
-            
+
             if trimmed.is_empty() {
                 return Err(Error::InvalidUri(value.to_string()));
             }
@@ -141,23 +141,27 @@ where
             let trimmed_byte_len = trimmed.len();
 
             /* Early return if can't be parsed as a Uri. Returns human-readable error.
-                * Comes after byte_len check, as this is a more expensive validation check.
-                * Maps a Error::InvalidUri error directly, to ensure format match on 
-                * `TryFrom<String>` implementation used by the other `visit_...` functions. */
+             * Comes after byte_len check, as this is a more expensive validation check.
+             * Maps a Error::InvalidUri error directly, to ensure format match on
+             * `TryFrom<String>` implementation used by the other `visit_...` functions. */
             if let Err(_) = UriRef::parse(trimmed) {
-                return Err(Error::InvalidUri(value.to_string()))
+                return Err(Error::InvalidUri(value.to_string()));
             }
 
-            /* trimmed will only ever start at the same ptr as s or later, so tells us how 
-                * far along to push the trimmed buffer. */
+            /* trimmed will only ever start at the same ptr as s or later, so tells us how
+             * far along to push the trimmed buffer. */
             let start = trimmed.as_ptr() as usize - value.as_ptr() as usize;
             (start, trimmed_byte_len)
         };
 
-        if trimmed_byte_len == value.len() { // wasn't shorter when trimmed (i.e. no whitespace)
+        if trimmed_byte_len == value.len() {
+            // wasn't shorter when trimmed (i.e. no whitespace)
             Ok(Uri(Cow::Borrowed(value)))
-        } else { // was shorter when trimmed, return just the slice for the inner content
-            Ok(Uri(Cow::Borrowed(&value[start_bytes..start_bytes + trimmed_byte_len])))
+        } else {
+            // was shorter when trimmed, return just the slice for the inner content
+            Ok(Uri(Cow::Borrowed(
+                &value[start_bytes..start_bytes + trimmed_byte_len],
+            )))
         }
     }
 }
@@ -165,12 +169,12 @@ where
 impl<'a> TryFrom<String> for Uri<'a> {
     type Error = Error;
 
-    /// This implementation does not catch empty strings, on the basis that individual structs can 
+    /// This implementation does not catch empty strings, on the basis that individual structs can
     /// deserialize these values as `None` if desired.
     fn try_from(mut value: String) -> Result<Self, Self::Error> {
         let (start_bytes, byte_len) = {
             let trimmed = value.trim();
-            
+
             if trimmed.is_empty() {
                 return Err(Error::InvalidUri(value.to_string()));
             }
@@ -180,18 +184,20 @@ impl<'a> TryFrom<String> for Uri<'a> {
             // Early return if can't be parsed as a Uri. Returns human-readable error.
             // Comes after byte_len check, as this is a more expensive validation check.
             if let Err(_) = UriRef::parse(trimmed) {
-                return Err(Error::InvalidUri(value.to_string()))
+                return Err(Error::InvalidUri(value.to_string()));
             }
 
-            // trimmed will only ever start at the same ptr as s or later, so tells us how far along 
+            // trimmed will only ever start at the same ptr as s or later, so tells us how far along
             // to push the trimmed buffer.
             let start = trimmed.as_ptr() as usize - value.as_ptr() as usize;
-                (start, byte_len)
+            (start, byte_len)
         };
 
-        if byte_len == value.len() { // wasn't shorted when trimmed
+        if byte_len == value.len() {
+            // wasn't shorted when trimmed
             Ok(Uri(Cow::Owned(value)))
-        } else { // was shorter when trimmed
+        } else {
+            // was shorter when trimmed
             value.truncate(start_bytes + byte_len); // truncate in place.
             value.drain(..start_bytes);
             Ok(Uri(Cow::Owned(value)))
@@ -201,13 +207,13 @@ impl<'a> TryFrom<String> for Uri<'a> {
 
 impl<'de, 'a> Deserialize<'de> for Uri<'a>
 where
-    'de: 'a
+    'de: 'a,
 {
-    // Visitor implementations are relatively costly here (references are cloned before any 
+    // Visitor implementations are relatively costly here (references are cloned before any
     // validation). This has been done to reduce boilerplate and make the code more readable.
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
-        D: serde::Deserializer<'de>
+        D: serde::Deserializer<'de>,
     {
         struct UriVisitor;
 
@@ -223,11 +229,10 @@ where
             where
                 E: serde::de::Error,
             {
-                Uri::try_from(v)
-                    .map_err(|e| serde::de::Error::custom(e))
+                Uri::try_from(v).map_err(|e| serde::de::Error::custom(e))
             }
 
-            /* temporary, holding buffer that will be dropped quickly (e.g. if serde_json has 
+            /* temporary, holding buffer that will be dropped quickly (e.g. if serde_json has
              * replaced \r\n with actual bytes, therefore making the buffer non-contiguous).
              * Our only real choice here is to cast it straight to a `String`. */
             fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
@@ -236,10 +241,9 @@ where
             {
                 let v = v.to_string();
 
-                // Pass the String straight to TryFrom. Error messages return the same user-facing 
+                // Pass the String straight to TryFrom. Error messages return the same user-facing
                 // message and type through mapping.
-                Uri::try_from(v)
-                    .map_err(|e| serde::de::Error::custom(e))
+                Uri::try_from(v).map_err(|e| serde::de::Error::custom(e))
             }
 
             // definitely owned.
@@ -247,10 +251,9 @@ where
             where
                 E: serde::de::Error,
             {
-                // Pass the String straight to TryFrom. Error messages return the same user-facing 
+                // Pass the String straight to TryFrom. Error messages return the same user-facing
                 // message and type through mapping.
-                Uri::try_from(v)
-                    .map_err(|e| serde::de::Error::custom(e))
+                Uri::try_from(v).map_err(|e| serde::de::Error::custom(e))
             }
         }
 

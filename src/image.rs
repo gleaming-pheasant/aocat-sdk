@@ -122,6 +122,12 @@ pub struct Images<'a> {
     primary_index: usize,
 }
 
+impl<'a> Images<'a> {
+    pub fn is_empty(&self) -> bool {
+        self.images.is_empty()
+    }
+}
+
 impl<'a> Serialize for Images<'a> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

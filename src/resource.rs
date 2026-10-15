@@ -18,11 +18,13 @@ use crate::types::{Agents, AriadneSubjects, DataTypes, NativeTypes, Uri};
 pub struct Resource<'a> {
     resource_type: ResourceType,
     access_rights: Cow<'a, str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     access_policy: Option<Cow<'a, str>>,
     original_id: Cow<'a, str>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     identifiers: Vec<Cow<'a, str>>,
     title: Cow<'a, str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     description: Option<Cow<'a, str>>,
     country: Country<'a>,
     ariadne_subjects: AriadneSubjects,
@@ -32,21 +34,23 @@ pub struct Resource<'a> {
     modified: NaiveDateTime,
     language: Language,
     landing_page: Uri<'a>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     named_places: Vec<Cow<'a, str>>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     native_subjects: Vec<Cow<'a, str>>, // not default, as mandatory if AO_Individual_Data_Resource
+    #[serde(skip_serializing_if = "Option::is_none")]
     parent_id: Option<Cow<'a, str>>, // not default, as mandatory if AO_Individual_Data_Resource
     native_types: NativeTypes<'a>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     temporal_regions: Vec<TemporalRegion<'a>>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     geometries: Vec<Geometry>,
     publishers: Agents<'a>,
     owners: Agents<'a>,
     contributors: Agents<'a>,
     creators: Agents<'a>,
     responsibles: Agents<'a>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Images::is_empty")]
     images: Images<'a>,
 }
 

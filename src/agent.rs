@@ -15,14 +15,14 @@ impl<'a> Agent<'a> {
     pub fn new(name: impl Into<Cow<'a, str>>, identifier: Option<Uri<'a>>) -> Self {
         Self {
             name: name.into(),
-            identifier
+            identifier,
         }
     }
 
     pub const fn new_const(name: &'static str, identifier: Option<Uri<'static>>) -> Self {
         Self {
             name: Cow::Borrowed(name),
-            identifier
+            identifier,
         }
     }
 
