@@ -40,4 +40,10 @@ impl<'a> ResourceGraph<'a> {
     pub fn add_resource(&mut self, resource: Resource<'a>) {
         self.resources.push(resource);
     }
+
+    /// Clear this ResourceGraph of all resources. This is useful for reusing the same ResourceGraph 
+    /// for multiple API calls; including paginating large datasets.
+    pub fn flush(&mut self) {
+        self.resources.clear();
+    }
 }
