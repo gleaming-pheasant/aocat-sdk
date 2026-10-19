@@ -54,6 +54,116 @@ pub struct Resource<'a> {
     images: Images<'a>,
 }
 
+impl<'a> Resource<'a> {
+    pub fn resource_type(&self) -> &ResourceType {
+        &self.resource_type
+    }
+
+    pub fn access_rights(&self) -> &Cow<'a, str> {
+        &self.access_rights
+    }
+
+    pub fn access_policy(&self) -> Option<&Cow<'a, str>> {
+        self.access_policy.as_ref()
+    }
+
+    pub fn original_id(&self) -> &Cow<'a, str> {
+        &self.original_id
+    }
+
+    pub fn identifiers(&self) -> &[Cow<'a, str>] {
+        &self.identifiers
+    }
+
+    pub fn title(&self) -> &Cow<'a, str> {
+        &self.title
+    }
+
+    pub fn description(&self) -> Option<&Cow<'a, str>> {
+        self.description.as_ref()
+    }
+
+    pub fn country(&self) -> &Country<'a> {
+        &self.country
+    }
+
+    pub fn ariadne_subjects(&self) -> &AriadneSubjects {
+        &self.ariadne_subjects
+    }
+
+    pub fn data_types(&self) -> &DataTypes {
+        &self.data_types
+    }
+
+    pub fn created(&self) -> &NaiveDateTime {
+        &self.created
+    }
+
+    pub fn issued(&self) -> &NaiveDateTime {
+        &self.issued
+    }
+
+    pub fn modified(&self) -> &NaiveDateTime {
+        &self.modified
+    }
+
+    pub fn language(&self) -> &Language {
+        &self.language
+    }
+
+    pub fn landing_page(&self) -> &Uri<'a> {
+        &self.landing_page
+    }
+
+    pub fn named_places(&self) -> &[Cow<'a, str>] {
+        &self.named_places
+    }
+
+    pub fn native_subjects(&self) -> &[Cow<'a, str>] {
+        &self.native_subjects
+    }
+
+    pub fn parent_id(&self) -> Option<&Cow<'a, str>> {
+        self.parent_id.as_ref()
+    }
+
+    pub fn native_types(&self) -> &NativeTypes<'a> {
+        &self.native_types
+    }
+
+    pub fn temporal_regions(&self) -> &[TemporalRegion<'a>] {
+        &self.temporal_regions
+    }
+
+    pub fn geometries(&self) -> &[Geometry] {
+        &self.geometries
+    }
+
+    pub fn publishers(&self) -> &Agents<'a> {
+        &self.publishers
+    }
+
+    pub fn owners(&self) -> &Agents<'a> {
+        &self.owners
+    }
+
+    pub fn contributors(&self) -> &Agents<'a> {
+        &self.contributors
+    }
+
+    pub fn creators(&self) -> &Agents<'a> {
+        &self.creators
+    }
+
+    pub fn responsibles(&self) -> &Agents<'a> {
+        &self.responsibles
+    }
+
+    pub fn images(&self) -> &Images<'a> {
+        &self.images
+    }
+}
+
 impl<'a> TryFrom<ResourceBuilder<'a>> for Resource<'a> {
     type Error = Error;
 
