@@ -16,7 +16,8 @@ pub struct TemporalRegionBuilder<'a> {
 }
 
 impl<'a> TemporalRegionBuilder<'a> {
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         TemporalRegionBuilder {
             from: None,
             until: None,
@@ -24,21 +25,26 @@ impl<'a> TemporalRegionBuilder<'a> {
         }
     }
 
-    pub fn set_from(mut self, from: i32) -> Self {
+    #[must_use]
+    pub const fn set_from(mut self, from: i32) -> Self {
         self.from = Some(from);
         self
     }
 
-    pub fn set_until(mut self, until: i32) -> Self {
+    #[must_use]
+    pub const fn set_until(mut self, until: i32) -> Self {
         self.until = Some(until);
         self
     }
 
+    #[must_use]
     pub fn set_period_name(mut self, period_name: impl Into<Cow<'a, str>>) -> Self {
         self.period_name = Some(period_name.into());
         self
     }
 
+    /// # Errors
+    /// If neither `from` nor `period_name` is provided.
     pub fn build(self) -> Result<TemporalRegion<'a>, Error> {
         match (self.from, self.until, self.period_name) {
             (Some(from), Some(until), Some(period_name)) => Ok(TemporalRegion::Both {
@@ -78,10 +84,12 @@ pub enum TemporalRegion<'a> {
 }
 
 impl<'a> TemporalRegion<'a> {
-    pub fn builder() -> TemporalRegionBuilder<'a> {
+    #[must_use]
+    pub const fn builder() -> TemporalRegionBuilder<'a> {
         TemporalRegionBuilder::new()
     }
 
+    #[must_use]
     pub const fn new_period(from: i32, until: Option<i32>) -> Self {
         TemporalRegion::Period { from, until }
     }
@@ -90,6 +98,7 @@ impl<'a> TemporalRegion<'a> {
         TemporalRegion::Name(period_name.into())
     }
 
+    #[must_use]
     pub const fn new_const_name(period_name: &'static str) -> Self {
         TemporalRegion::Name(Cow::Borrowed(period_name))
     }
@@ -102,6 +111,7 @@ impl<'a> TemporalRegion<'a> {
         }
     }
 
+    #[must_use]
     pub const fn new_const_both(from: i32, until: Option<i32>, period_name: &'static str) -> Self {
         TemporalRegion::Both {
             from,
@@ -111,7 +121,7 @@ impl<'a> TemporalRegion<'a> {
     }
 }
 
-impl<'a> Serialize for TemporalRegion<'a> {
+impl Serialize for TemporalRegion<'_> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -215,6 +225,7 @@ impl<'de: 'a, 'a> Deserialize<'de> for TemporalRegion<'a> {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::TemporalRegion;
 

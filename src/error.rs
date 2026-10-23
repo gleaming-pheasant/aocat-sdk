@@ -12,26 +12,26 @@ pub enum Error {
 
 impl From<wkt::conversion::Error> for Error {
     fn from(_: wkt::conversion::Error) -> Self {
-        Error::InvalidGeometry
+        Self::InvalidGeometry
     }
 }
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::EmptyVec { field, min } => {
-                write!(f, "Field '{}' must have at least {} elements", field, min)
+            Self::EmptyVec { field, min } => {
+                write!(f, "Field '{field}' must have at least {min} elements")
             }
-            Error::InvalidGeometry => write!(
+            Self::InvalidGeometry => write!(
                 f,
                 "Invalid geometry, expecting a valid GeoJSON or WKT representation"
             ),
-            Error::InvalidLanguageCode(code) => write!(f, "Invalid language code: {}", code),
-            Error::InvalidUri(uri) => write!(f, "Invalid URI: {}", uri),
-            Error::InvalidValue(field) => write!(f, "Invalid value for field: {}", field),
-            Error::MissingField(field) => write!(f, "Missing required field: {}", field),
-            Error::MultiplePrimaryImages => write!(f, "Multiple images marked as primary"),
-            Error::NoPrimaryImages => write!(f, "No images marked as primary"),
+            Self::InvalidLanguageCode(code) => write!(f, "Invalid language code: {code}"),
+            Self::InvalidUri(uri) => write!(f, "Invalid URI: {uri}"),
+            Self::InvalidValue(field) => write!(f, "Invalid value for field: {field}"),
+            Self::MissingField(field) => write!(f, "Missing required field: {field}"),
+            Self::MultiplePrimaryImages => write!(f, "Multiple images marked as primary"),
+            Self::NoPrimaryImages => write!(f, "No images marked as primary"),
         }
     }
 }

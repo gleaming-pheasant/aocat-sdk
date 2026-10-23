@@ -2,20 +2,21 @@ use serde::{Deserialize, Serialize, Serializer};
 use wkt::ToWkt;
 
 /// Wrapper around `geojson::Geometry` to implement `Serialize` (as WKT) and `Deserialize` (from
-/// GeoJSON).
+/// `GeoJSON`).
 #[derive(Clone, Debug, Deserialize)]
 pub struct Geometry(geojson::Geometry);
 
 impl Geometry {
     /// Create a new `Geometry` from a `geojson::Geometry`.
-    pub fn new(geometry: geojson::Geometry) -> Self {
-        Geometry(geometry)
+    #[must_use]
+    pub const fn new(geometry: geojson::Geometry) -> Self {
+        Self(geometry)
     }
 }
 
 impl From<geojson::Geometry> for Geometry {
     fn from(geometry: geojson::Geometry) -> Self {
-        Geometry(geometry)
+        Self(geometry)
     }
 }
 

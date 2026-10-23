@@ -7,7 +7,7 @@ use serde::{Serialize, Serializer};
 
 use crate::Error;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[repr(u8)]
 pub enum Language {
     Aa,
@@ -46,6 +46,7 @@ pub enum Language {
     Dz,
     Ee,
     El,
+    #[default]
     En,
     Eo,
     Es,
@@ -1108,6 +1109,7 @@ static LANGUAGES: [LanguageInner; Language::COUNT] = [
     },
 ];
 
+#[allow(clippy::cast_possible_truncation)]
 static ISO_639_1_LOOKUP: [Option<Language>; 676] = {
     let mut table = [None; 676]; // 26*26 all possible pairs
     let mut i = 0;
@@ -1122,8 +1124,7 @@ static ISO_639_1_LOOKUP: [Option<Language>; 676] = {
         let col = (b1 - b'a') as usize;
         let idx = row * 26 + col;
 
-        // Rust 1.56+ allows transmute in const contexts
-        table[idx] = Some(unsafe { std::mem::transmute(i as u8) });
+        table[idx] = Some(unsafe { std::mem::transmute::<u8, Language>(i as u8) });
         i += 1;
     }
 
@@ -1138,18 +1139,25 @@ impl Language {
         &LANGUAGES[self as usize]
     }
 
+    #[must_use]
     pub fn iso_639_1(self) -> &'static str {
         // table is ASCII-only by construction
         unsafe { std::str::from_utf8_unchecked(&self.inner().iso_639_1) }
     }
+
+    #[must_use]
     pub fn iso_639_2(self) -> &'static str {
         unsafe { std::str::from_utf8_unchecked(&self.inner().iso_639_2) }
     }
+
+    #[must_use]
     pub fn name(self) -> &'static str {
         self.inner().english_name
     }
 
     // Because the table is sorted by 2-letter code, lookup is a binary search.
+    /// # Errors
+    /// If lanauge `code` is not in valid list of ISO 639-1 codes.
     pub fn try_from_iso_639_1(code: &str) -> Result<Self, Error> {
         let b = code.as_bytes();
         let key: [u8; 2] = b
@@ -1168,12 +1176,6 @@ impl Language {
         }
 
         Err(Error::InvalidLanguageCode(code.to_string()))
-    }
-}
-
-impl Default for Language {
-    fn default() -> Self {
-        Self::En
     }
 }
 
@@ -1230,11 +1232,12 @@ impl TryFrom<&str> for Language {
     type Error = Error;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
-        Language::try_from_iso_639_1(value)
+        Self::try_from_iso_639_1(value)
     }
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::*;
     use serde::de::IntoDeserializer;

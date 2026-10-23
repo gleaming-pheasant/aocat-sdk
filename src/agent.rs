@@ -19,6 +19,7 @@ impl<'a> Agent<'a> {
         }
     }
 
+    #[must_use]
     pub const fn new_const(name: &'static str, identifier: Option<Uri<'static>>) -> Self {
         Self {
             name: Cow::Borrowed(name),
@@ -26,11 +27,13 @@ impl<'a> Agent<'a> {
         }
     }
 
+    #[must_use]
     pub fn name(&self) -> &str {
         &self.name
     }
 
-    pub fn identifier(&self) -> Option<&Uri<'_>> {
+    #[must_use]
+    pub const fn identifier(&self) -> Option<&Uri<'_>> {
         self.identifier.as_ref()
     }
 }

@@ -11,23 +11,29 @@ pub struct CountryBuilder<'a> {
 }
 
 impl<'a> CountryBuilder<'a> {
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         CountryBuilder {
             name: None,
             qid: None,
         }
     }
 
+    #[must_use]
     pub fn set_name(mut self, name: impl Into<Cow<'a, str>>) -> Self {
         self.name = Some(name.into());
         self
     }
 
-    pub fn set_qid(mut self, qid: u32) -> Self {
+    #[must_use]
+    pub const fn set_qid(mut self, qid: u32) -> Self {
         self.qid = Some(qid);
         self
     }
 
+    /// # Errors
+    /// If either `name` or `qid` is not provided.
+    #[allow(clippy::missing_panics_doc, clippy::unwrap_used)]
     pub fn build(self) -> Result<Country<'a>, Error> {
         if self.name.is_none() {
             return Err(Error::MissingField("name"));
@@ -51,6 +57,7 @@ pub struct Country<'a> {
 }
 
 impl Country<'static> {
+    #[must_use]
     pub const fn new_const(name: &'static str, qid: u32) -> Self {
         Country {
             name: Cow::Borrowed(name),
@@ -67,11 +74,13 @@ impl<'a> Country<'a> {
         }
     }
 
+    #[must_use]
     pub fn name(&self) -> &str {
         &self.name
     }
 
-    pub fn qid(&self) -> u32 {
+    #[must_use]
+    pub const fn qid(&self) -> u32 {
         self.qid
     }
 }

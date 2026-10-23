@@ -8,6 +8,7 @@ use crate::{Error, types::Uri};
 /// Serves as a builder, but can be built from new. Each image is built into a private controlled
 /// type when added to the `Images` list (which is not mandatory, and has no minimum length).
 #[derive(Clone, Debug, Default, Deserialize)]
+#[allow(clippy::struct_field_names)]
 pub struct Image<'a> {
     image_url: Option<Cow<'a, str>>,
     iiif_manifest_url: Option<Cow<'a, str>>,
@@ -35,19 +36,22 @@ impl<'a> Image<'a> {
         self.iiif_manifest_url = iiif_manifest_url.map(Into::into);
     }
 
-    pub fn set_primary(&mut self, primary: bool) {
+    pub const fn set_primary(&mut self, primary: bool) {
         self.primary = primary;
     }
 
+    #[must_use]
     pub fn image_url(&self) -> Option<&str> {
         self.image_url.as_deref()
     }
 
+    #[must_use]
     pub fn iiif_manifest_url(&self) -> Option<&str> {
         self.iiif_manifest_url.as_deref()
     }
 
-    pub fn primary(&self) -> bool {
+    #[must_use]
+    pub const fn primary(&self) -> bool {
         self.primary
     }
 }
@@ -74,7 +78,7 @@ struct ImageOut<'a> {
 }
 
 impl<'a> InnerImage<'a> {
-    fn as_out(&'a self, primary: bool) -> ImageOut<'a> {
+    const fn as_out(&'a self, primary: bool) -> ImageOut<'a> {
         match self {
             InnerImage::Image(i) => ImageOut {
                 image_url: Some(i),
@@ -122,13 +126,14 @@ pub struct Images<'a> {
     primary_index: usize,
 }
 
-impl<'a> Images<'a> {
-    pub fn is_empty(&self) -> bool {
+impl Images<'_> {
+    #[must_use]
+    pub const fn is_empty(&self) -> bool {
         self.images.is_empty()
     }
 }
 
-impl<'a> Serialize for Images<'a> {
+impl Serialize for Images<'_> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -149,7 +154,7 @@ impl<'a> TryFrom<Vec<Image<'a>>> for Images<'a> {
         let mut primary_index: Option<usize> = None;
 
         for (ix, image) in v.into_iter().enumerate() {
-            if image.primary() == true {
+            if image.primary() {
                 if primary_index.is_some() {
                     return Err(Error::MultiplePrimaryImages);
                 }

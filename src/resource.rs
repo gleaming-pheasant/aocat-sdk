@@ -15,6 +15,7 @@ use crate::types::{Agents, AriadneSubjects, DataTypes, NativeTypes, Uri};
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(bound(deserialize = "'de: 'a"), try_from = "ResourceBuilder")]
+#[allow(clippy::struct_field_names)]
 pub struct Resource<'a> {
     resource_type: ResourceType,
     access_rights: Cow<'a, str>,
@@ -55,111 +56,138 @@ pub struct Resource<'a> {
 }
 
 impl<'a> Resource<'a> {
-    pub fn resource_type(&self) -> &ResourceType {
+    #[must_use]
+    pub const fn resource_type(&self) -> &ResourceType {
         &self.resource_type
     }
 
-    pub fn access_rights(&self) -> &Cow<'a, str> {
+    #[must_use]
+    pub const fn access_rights(&self) -> &Cow<'a, str> {
         &self.access_rights
     }
 
-    pub fn access_policy(&self) -> Option<&Cow<'a, str>> {
+    #[must_use]
+    pub const fn access_policy(&self) -> Option<&Cow<'a, str>> {
         self.access_policy.as_ref()
     }
 
-    pub fn original_id(&self) -> &Cow<'a, str> {
+    #[must_use]
+    pub const fn original_id(&self) -> &Cow<'a, str> {
         &self.original_id
     }
 
+    #[must_use]
     pub fn identifiers(&self) -> &[Cow<'a, str>] {
         &self.identifiers
     }
 
-    pub fn title(&self) -> &Cow<'a, str> {
+    #[must_use]
+    pub const fn title(&self) -> &Cow<'a, str> {
         &self.title
     }
 
-    pub fn description(&self) -> Option<&Cow<'a, str>> {
+    #[must_use]
+    pub const fn description(&self) -> Option<&Cow<'a, str>> {
         self.description.as_ref()
     }
 
-    pub fn country(&self) -> &Country<'a> {
+    #[must_use]
+    pub const fn country(&self) -> &Country<'a> {
         &self.country
     }
 
-    pub fn ariadne_subjects(&self) -> &AriadneSubjects {
+    #[must_use]
+    pub const fn ariadne_subjects(&self) -> &AriadneSubjects {
         &self.ariadne_subjects
     }
 
-    pub fn data_types(&self) -> &DataTypes {
+    #[must_use]
+    pub const fn data_types(&self) -> &DataTypes {
         &self.data_types
     }
 
-    pub fn created(&self) -> &NaiveDateTime {
+    #[must_use]
+    pub const fn created(&self) -> &NaiveDateTime {
         &self.created
     }
 
-    pub fn issued(&self) -> &NaiveDateTime {
+    #[must_use]
+    pub const fn issued(&self) -> &NaiveDateTime {
         &self.issued
     }
 
-    pub fn modified(&self) -> &NaiveDateTime {
+    #[must_use]
+    pub const fn modified(&self) -> &NaiveDateTime {
         &self.modified
     }
 
-    pub fn language(&self) -> &Language {
+    #[must_use]
+    pub const fn language(&self) -> &Language {
         &self.language
     }
 
-    pub fn landing_page(&self) -> &Uri<'a> {
+    #[must_use]
+    pub const fn landing_page(&self) -> &Uri<'a> {
         &self.landing_page
     }
 
+    #[must_use]
     pub fn named_places(&self) -> &[Cow<'a, str>] {
         &self.named_places
     }
 
+    #[must_use]
     pub fn native_subjects(&self) -> &[Cow<'a, str>] {
         &self.native_subjects
     }
 
-    pub fn parent_id(&self) -> Option<&Cow<'a, str>> {
+    #[must_use]
+    pub const fn parent_id(&self) -> Option<&Cow<'a, str>> {
         self.parent_id.as_ref()
     }
 
-    pub fn native_types(&self) -> &NativeTypes<'a> {
+    #[must_use]
+    pub const fn native_types(&self) -> &NativeTypes<'a> {
         &self.native_types
     }
 
+    #[must_use]
     pub fn temporal_regions(&self) -> &[TemporalRegion<'a>] {
         &self.temporal_regions
     }
 
+    #[must_use]
     pub fn geometries(&self) -> &[Geometry] {
         &self.geometries
     }
 
-    pub fn publishers(&self) -> &Agents<'a> {
+    #[must_use]
+    pub const fn publishers(&self) -> &Agents<'a> {
         &self.publishers
     }
 
-    pub fn owners(&self) -> &Agents<'a> {
+    #[must_use]
+    pub const fn owners(&self) -> &Agents<'a> {
         &self.owners
     }
 
-    pub fn contributors(&self) -> &Agents<'a> {
+    #[must_use]
+    pub const fn contributors(&self) -> &Agents<'a> {
         &self.contributors
     }
 
-    pub fn creators(&self) -> &Agents<'a> {
+    #[must_use]
+    pub const fn creators(&self) -> &Agents<'a> {
         &self.creators
     }
 
-    pub fn responsibles(&self) -> &Agents<'a> {
+    #[must_use]
+    pub const fn responsibles(&self) -> &Agents<'a> {
         &self.responsibles
     }
 
-    pub fn images(&self) -> &Images<'a> {
+    #[must_use]
+    pub const fn images(&self) -> &Images<'a> {
         &self.images
     }
 }
@@ -232,215 +260,261 @@ pub struct ResourceBuilder<'a> {
 }
 
 impl<'a> ResourceBuilder<'a> {
+    #[must_use]
     pub fn new() -> Self {
-        Default::default()
+        Self::default()
     }
 
-    pub fn set_resource_type(mut self, value: ResourceType) -> Self {
+    #[must_use]
+    pub const fn set_resource_type(mut self, value: ResourceType) -> Self {
         self.resource_type = Some(value);
         self
     }
 
+    #[must_use]
     pub fn set_access_rights(mut self, value: impl Into<Cow<'a, str>>) -> Self {
         self.access_rights = Some(value.into());
         self
     }
 
+    #[must_use]
     pub fn set_access_policy(mut self, value: impl Into<Cow<'a, str>>) -> Self {
         self.access_policy = Some(value.into());
         self
     }
 
+    #[must_use]
     pub fn set_original_id(mut self, value: impl Into<Cow<'a, str>>) -> Self {
         self.original_id = Some(value.into());
         self
     }
 
+    #[must_use]
     pub fn set_identifiers(mut self, value: Vec<Cow<'a, str>>) -> Self {
         self.identifiers = value;
         self
     }
 
+    #[must_use]
     pub fn add_identifier(mut self, value: impl Into<Cow<'a, str>>) -> Self {
         self.identifiers.push(value.into());
         self
     }
 
+    #[must_use]
     pub fn set_title(mut self, value: impl Into<Cow<'a, str>>) -> Self {
         self.title = Some(value.into());
         self
     }
 
+    #[must_use]
     pub fn set_description(mut self, value: impl Into<Cow<'a, str>>) -> Self {
         self.description = Some(value.into());
         self
     }
 
+    #[must_use]
     pub fn set_country(mut self, value: Country<'a>) -> Self {
         self.country = Some(value);
         self
     }
 
+    #[must_use]
     pub fn set_ariadne_subjects(mut self, value: Vec<AriadneSubject>) -> Self {
         self.ariadne_subjects = value;
         self
     }
 
+    #[must_use]
     pub fn add_ariadne_subject(mut self, value: AriadneSubject) -> Self {
         self.ariadne_subjects.push(value);
         self
     }
 
+    #[must_use]
     pub fn set_data_types(mut self, value: Vec<DataType>) -> Self {
         self.data_types = value;
         self
     }
 
+    #[must_use]
     pub fn add_data_type(mut self, value: DataType) -> Self {
         self.data_types.push(value);
         self
     }
 
-    pub fn set_created(mut self, value: NaiveDateTime) -> Self {
+    #[must_use]
+    pub const fn set_created(mut self, value: NaiveDateTime) -> Self {
         self.created = Some(value);
         self
     }
 
-    pub fn set_issued(mut self, value: NaiveDateTime) -> Self {
+    #[must_use]
+    pub const fn set_issued(mut self, value: NaiveDateTime) -> Self {
         self.issued = Some(value);
         self
     }
 
-    pub fn set_modified(mut self, value: NaiveDateTime) -> Self {
+    #[must_use]
+    pub const fn set_modified(mut self, value: NaiveDateTime) -> Self {
         self.modified = Some(value);
         self
     }
 
-    pub fn set_language(mut self, value: Language) -> Self {
+    #[must_use]
+    pub const fn set_language(mut self, value: Language) -> Self {
         self.language = Some(value);
         self
     }
 
+    #[must_use]
     pub fn set_landing_page(mut self, value: impl Into<Cow<'a, str>>) -> Self {
         self.landing_page = Some(value.into());
         self
     }
 
+    #[must_use]
     pub fn set_named_places(mut self, value: Vec<Cow<'a, str>>) -> Self {
         self.named_places = value;
         self
     }
 
+    #[must_use]
     pub fn add_named_place(mut self, value: impl Into<Cow<'a, str>>) -> Self {
         self.named_places.push(value.into());
         self
     }
 
+    #[must_use]
     pub fn set_native_subjects(mut self, value: Vec<Cow<'a, str>>) -> Self {
         self.native_subjects = value;
         self
     }
 
+    #[must_use]
     pub fn add_native_subject(mut self, value: impl Into<Cow<'a, str>>) -> Self {
         self.native_subjects.push(value.into());
         self
     }
 
+    #[must_use]
     pub fn set_parent_id(mut self, value: impl Into<Cow<'a, str>>) -> Self {
         self.parent_id = Some(value.into());
         self
     }
 
+    #[must_use]
     pub fn set_native_types(mut self, value: Vec<Cow<'a, str>>) -> Self {
         self.native_types = value;
         self
     }
 
+    #[must_use]
     pub fn add_native_type(mut self, value: impl Into<Cow<'a, str>>) -> Self {
         self.native_types.push(value.into());
         self
     }
 
+    #[must_use]
     pub fn set_temporal_regions(mut self, value: Vec<TemporalRegion<'a>>) -> Self {
         self.temporal_regions = value;
         self
     }
 
+    #[must_use]
     pub fn add_temporal_region(mut self, value: TemporalRegion<'a>) -> Self {
         self.temporal_regions.push(value);
         self
     }
 
+    #[must_use]
     pub fn set_geometries(mut self, value: Vec<Geometry>) -> Self {
         self.geometries = value;
         self
     }
 
+    #[must_use]
     pub fn add_geometry(mut self, value: Geometry) -> Self {
         self.geometries.push(value);
         self
     }
 
+    #[must_use]
     pub fn set_publishers(mut self, value: Vec<Agent<'a>>) -> Self {
         self.publishers = value;
         self
     }
 
+    #[must_use]
     pub fn add_publisher(mut self, value: Agent<'a>) -> Self {
         self.publishers.push(value);
         self
     }
 
+    #[must_use]
     pub fn set_owners(mut self, value: Vec<Agent<'a>>) -> Self {
         self.owners = value;
         self
     }
 
+    #[must_use]
     pub fn add_owner(mut self, value: Agent<'a>) -> Self {
         self.owners.push(value);
         self
     }
 
+    #[must_use]
     pub fn set_contributors(mut self, value: Vec<Agent<'a>>) -> Self {
         self.contributors = value;
         self
     }
 
+    #[must_use]
     pub fn add_contributor(mut self, value: Agent<'a>) -> Self {
         self.contributors.push(value);
         self
     }
 
+    #[must_use]
     pub fn set_creators(mut self, value: Vec<Agent<'a>>) -> Self {
         self.creators = value;
         self
     }
 
+    #[must_use]
     pub fn add_creator(mut self, value: Agent<'a>) -> Self {
         self.creators.push(value);
         self
     }
 
+    #[must_use]
     pub fn set_responsibles(mut self, value: Vec<Agent<'a>>) -> Self {
         self.responsibles = value;
         self
     }
 
+    #[must_use]
     pub fn add_responsible(mut self, value: Agent<'a>) -> Self {
         self.responsibles.push(value);
         self
     }
 
+    #[must_use]
     pub fn set_images(mut self, value: Vec<Image<'a>>) -> Self {
         self.images = value;
         self
     }
 
+    #[must_use]
     pub fn add_image(mut self, value: Image<'a>) -> Self {
         self.images.push(value);
         self
     }
 
+    /// # Errors
+    /// If any of the mandatory fields are missing, if the images are invalid (only one primary
+    /// image) or if any of the minimum length vectors (e.g. `ariadne_subjects`, `creators`, etc.)
+    /// are empty.
     pub fn build(self) -> Result<Resource<'a>, Error> {
         if self.resource_type == Some(ResourceType::Individual) && self.native_subjects.is_empty() {
             return Err(Error::MissingField(

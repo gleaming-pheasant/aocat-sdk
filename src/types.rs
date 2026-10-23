@@ -19,6 +19,8 @@ pub type NativeTypes<'a> = MinLengthVec<1, Cow<'a, str>>;
 pub struct MinLengthVec<const LEN: usize, T>(Vec<T>);
 
 impl<const LEN: usize, T> MinLengthVec<LEN, T> {
+    /// # Errors
+    /// If the provided vector has fewer than `LEN` elements, returns an `Error::EmptyVec`.
     pub fn new(vec: Vec<T>) -> Result<Self, Error> {
         if vec.len() < LEN {
             return Err(Error::EmptyVec {
@@ -26,9 +28,10 @@ impl<const LEN: usize, T> MinLengthVec<LEN, T> {
                 min: LEN,
             });
         }
-        Ok(MinLengthVec(vec))
+        Ok(Self(vec))
     }
 
+    #[must_use]
     pub fn into_inner(self) -> Vec<T> {
         self.0
     }
@@ -77,7 +80,7 @@ where
         D: Deserializer<'de>,
     {
         let vec = Vec::<T>::deserialize(deserializer)?;
-        MinLengthVec::new(vec).map_err(de::Error::custom)
+        Self::new(vec).map_err(de::Error::custom)
     }
 }
 
@@ -94,7 +97,7 @@ impl<const LEN: usize, T> TryFrom<Vec<T>> for MinLengthVec<LEN, T> {
     type Error = Error;
 
     fn try_from(v: Vec<T>) -> Result<Self, Self::Error> {
-        MinLengthVec::new(v)
+        Self::new(v)
     }
 }
 
@@ -103,7 +106,7 @@ impl<const LEN: usize, T> TryFrom<Vec<T>> for MinLengthVec<LEN, T> {
 #[derive(Clone, Debug, Serialize)]
 pub struct Uri<'a>(Cow<'a, str>);
 
-impl<'a> Deref for Uri<'a> {
+impl Deref for Uri<'_> {
     type Target = str;
 
     fn deref(&self) -> &Self::Target {
@@ -144,7 +147,7 @@ where
              * Comes after byte_len check, as this is a more expensive validation check.
              * Maps a Error::InvalidUri error directly, to ensure format match on
              * `TryFrom<String>` implementation used by the other `visit_...` functions. */
-            if let Err(_) = UriRef::parse(trimmed) {
+            if UriRef::parse(trimmed).is_err() {
                 return Err(Error::InvalidUri(value.to_string()));
             }
 
@@ -166,7 +169,7 @@ where
     }
 }
 
-impl<'a> TryFrom<String> for Uri<'a> {
+impl TryFrom<String> for Uri<'_> {
     type Error = Error;
 
     /// This implementation does not catch empty strings, on the basis that individual structs can
@@ -176,15 +179,15 @@ impl<'a> TryFrom<String> for Uri<'a> {
             let trimmed = value.trim();
 
             if trimmed.is_empty() {
-                return Err(Error::InvalidUri(value.to_string()));
+                return Err(Error::InvalidUri(value.clone()));
             }
 
             let byte_len = trimmed.len();
 
             // Early return if can't be parsed as a Uri. Returns human-readable error.
             // Comes after byte_len check, as this is a more expensive validation check.
-            if let Err(_) = UriRef::parse(trimmed) {
-                return Err(Error::InvalidUri(value.to_string()));
+            if UriRef::parse(trimmed).is_err() {
+                return Err(Error::InvalidUri(value.clone()));
             }
 
             // trimmed will only ever start at the same ptr as s or later, so tells us how far along
@@ -195,13 +198,12 @@ impl<'a> TryFrom<String> for Uri<'a> {
 
         if byte_len == value.len() {
             // wasn't shorted when trimmed
-            Ok(Uri(Cow::Owned(value)))
-        } else {
-            // was shorter when trimmed
-            value.truncate(start_bytes + byte_len); // truncate in place.
-            value.drain(..start_bytes);
-            Ok(Uri(Cow::Owned(value)))
+            return Ok(Uri(Cow::Owned(value)));
         }
+
+        value.truncate(start_bytes + byte_len); // truncate in place.
+        value.drain(..start_bytes);
+        Ok(Uri(Cow::Owned(value)))
     }
 }
 

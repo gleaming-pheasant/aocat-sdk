@@ -25,14 +25,17 @@ impl<'a> ResourceGraph<'a> {
         }
     }
 
+    #[must_use]
     pub fn resources(&self) -> &[Resource<'a>] {
         &self.resources
     }
 
+    #[must_use]
     pub fn api_id(&self) -> &str {
         &self.api_id
     }
 
+    #[must_use]
     pub fn id_path(&self) -> &str {
         &self.id_path
     }
@@ -41,8 +44,8 @@ impl<'a> ResourceGraph<'a> {
         self.resources.push(resource);
     }
 
-    /// Clear this ResourceGraph of all resources. This is useful for reusing the same ResourceGraph 
-    /// for multiple API calls; including paginating large datasets.
+    /// Clear this `ResourceGraph` of all resources. This is useful for reusing the same
+    /// `ResourceGraph` for multiple API calls; including paginating large datasets.
     pub fn flush(&mut self) {
         self.resources.clear();
     }
