@@ -13,9 +13,9 @@ use crate::language::Language;
 use crate::temporal_region::TemporalRegion;
 use crate::types::{Agents, AriadneSubjects, DataTypes, NativeTypes, Uri};
 
+#[allow(clippy::struct_field_names)]
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(bound(deserialize = "'de: 'a"), try_from = "ResourceBuilder")]
-#[allow(clippy::struct_field_names)]
 pub struct Resource<'a> {
     resource_type: ResourceType,
     access_rights: Cow<'a, str>,

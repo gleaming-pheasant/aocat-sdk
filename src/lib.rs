@@ -11,5 +11,5 @@ pub mod temporal_region;
 pub mod types;
 
 pub use error::Error;
-pub use graph::ResourceGraph;
+pub use graph::{ResourceGraph, ResourceSet};
 pub use resource::{Resource, ResourceBuilder};

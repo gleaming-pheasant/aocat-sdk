@@ -8,6 +8,15 @@ pub enum Error {
     MissingField(&'static str),
     MultiplePrimaryImages,
     NoPrimaryImages,
+    #[cfg(feature = "xml")]
+    Xml(quick_xml::SeError)
+}
+
+#[cfg(feature = "xml")]
+impl From<quick_xml::SeError> for Error {
+    fn from(e: quick_xml::SeError) -> Self {
+        Self::Xml(e)
+    }
 }
 
 impl From<wkt::conversion::Error> for Error {
@@ -32,6 +41,8 @@ impl std::fmt::Display for Error {
             Self::MissingField(field) => write!(f, "Missing required field: {field}"),
             Self::MultiplePrimaryImages => write!(f, "Multiple images marked as primary"),
             Self::NoPrimaryImages => write!(f, "No images marked as primary"),
+            #[cfg(feature = "xml")]
+            Self::Xml(e) => write!(f, "XML error: {e}"),
         }
     }
 }
